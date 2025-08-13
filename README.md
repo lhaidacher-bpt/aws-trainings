@@ -46,7 +46,7 @@ cp docs/terraform.tfvars.example terraform.tfvars
 terraform init
 terraform fmt -recursive
 terraform validate
-terraform plan
+terraform plan -refresh=false
 terraform apply
 ```
 
