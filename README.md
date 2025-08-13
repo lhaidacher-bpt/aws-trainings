@@ -63,7 +63,7 @@ terraform apply
 ### Aufgaben
 
 1. Workspace vorbereiten (init & .tfvars kopieren)
-2. Terraform Modul bauen
+2. Terraform Modul(e) bauen
     - Resources: [AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
     - Inputs: `bucket_name`, `enable_versioning`, `encryption_type`, `block_public_access`, `lifecycle`
     - BucketOwnerEnforced ist aktiviert
