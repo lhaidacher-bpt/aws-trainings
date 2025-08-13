@@ -58,12 +58,12 @@ terraform apply
 
 - Terraform-Workflow sicher anwenden: fmt → validate → plan (→ apply)
 - Ein minimales, wiederverwendbares S3-Bucket-Modul erstellen
-- Best Practices: Block Public Access, Versioning, Default Encryption (SSE-S3), TLS-only-Policy, Lifecycle
+- Best Practices: Block Public Access, Versioning, Default Encryption (SSE-S3), Lifecycle
 
 ### Aufgaben
 
 1. Workspace vorbereiten (init & .tfvars kopieren)
-2. Terraform Modul bauen
+2. Terraform Modul(e) bauen
     - Resources: [AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
     - Inputs: `bucket_name`, `enable_versioning`, `encryption_type`, `block_public_access`, `lifecycle`
     - BucketOwnerEnforced ist aktiviert
