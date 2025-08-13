@@ -21,7 +21,6 @@ module "s3_logs" {
   }
 }
 
-
 module "s3_landing" {
   source              = "./modules/s3-bucket"
   bucket_name         = "${local.name_base}-landing"

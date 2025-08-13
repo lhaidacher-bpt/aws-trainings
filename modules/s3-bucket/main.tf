@@ -15,10 +15,10 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm     = var.encryption_type == "SSE-KMS" ? "aws:kms" : "AES256"
-      kms_master_key_id = var.encryption_type == "SSE-KMS" ? var.kms_key_id : null
+      sse_algorithm = var.encryption_type == "SSE-KMS" ? "aws:kms" : "AES256"
+      #kms_master_key_id = var.encryption_type == "SSE-KMS" ? var.kms_key_id : null
     }
-    bucket_key_enabled = var.encryption_type == "SSE-KMS" ? true : null
+    #bucket_key_enabled = var.encryption_type == "SSE-KMS" ? true : null
   }
 }
 
@@ -28,6 +28,13 @@ resource "aws_s3_bucket_public_access_block" "this" {
   block_public_policy     = var.block_public_access
   ignore_public_acls      = var.block_public_access
   restrict_public_buckets = var.block_public_access
+}
+
+resource "aws_s3_bucket_ownership_controls" "this" {
+  bucket = aws_s3_bucket.this.id
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "this" {
@@ -62,9 +69,4 @@ resource "aws_s3_bucket_lifecycle_configuration" "this" {
       }
     }
   }
-}
-
-resource "aws_s3_bucket_ownership_controls" "this" {
-  bucket = aws_s3_bucket.this.id
-  rule { object_ownership = "BucketOwnerEnforced" }
 }
