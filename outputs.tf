@@ -15,7 +15,7 @@ output "queues" {
 
 output "lambdas" {
   value = {
-    extract = try(module.lambda_extract.name, null)
-    splitter = try(module.lambda_splitter.name, null)
+    extract = try(module.lambda_extract.function_name, null)
+    splitter = try(module.lambda_splitter.function_name, null)
   }
 }
