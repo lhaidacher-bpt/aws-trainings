@@ -29,6 +29,6 @@ variable "message_retention_seconds" {
 
 variable "tags" {
   description = "Zusätzliche Tags; werden mit Provider default_tags gemerged"
-  type = map(string)
-  default = {}
+  type        = map(string)
+  default     = {}
 }
