@@ -749,4 +749,12 @@ FodyWeavers.xsd
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
 
+# Lambda build artifacts (archive_file output)
+terraform/build/
+terraform/**/build/
+**/modules/**/build/
+
+# ZIPs (falls generiert)
+*.zip
+
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,linux,terraform,intellij,intellij+all,intellij+iml,visualstudio,visualstudiocode
