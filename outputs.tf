@@ -5,3 +5,17 @@ output "buckets" {
     staging = try(module.s3_staging.bucket_name, null)
   }
 }
+
+output "queues" {
+  value = {
+    landing  = try(module.sqs_landing.name, null)
+    splitter = try(module.sqs_splitter.name, null)
+  }
+}
+
+output "lambdas" {
+  value = {
+    extract  = try(module.lambda_extract.function_name, null)
+    splitter = try(module.lambda_splitter.function_name, null)
+  }
+}

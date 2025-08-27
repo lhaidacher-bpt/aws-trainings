@@ -1,0 +1,16 @@
+{
+  "id": "bs4234-124g223-12",
+  "source": "demo",
+  "ingestTs": "2025-08-27T08:00:00Z",
+  "events": [
+    { "id": "e1",  "firstName": "Lena",  "lastName": "Keller",    "status": "NEW" },
+    { "id": "e2",  "firstName": "Sofia", "lastName": "Becker",    "status": "CONFIRMED" },
+    { "id": "e3",  "firstName": "Jonas", "lastName": "Meyer",     "status": "IN_PROGRESS" },
+    { "id": "e4",  "firstName": "Mia",   "lastName": "Schmidt",   "status": "CONFIRMED" },
+    { "id": "e5",  "firstName": "Noah",  "lastName": "Fischer",   "status": "REJECTED" },
+    { "id": "e6",  "firstName": "Leon",  "lastName": "Hoffmann",  "status": "REJECTED" },
+    { "id": "e7",  "firstName": "Emma",  "lastName": "Weber",     "status": "NEW" },
+    { "id": "e8",  "firstName": "Paul",  "lastName": "Wagner",    "status": "IN_PROGRESS" },
+    { "id": "e9",  "firstName": "Luca",  "lastName": "Schneider", "status": "NEW" }
+  ]
+}
