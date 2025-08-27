@@ -3,6 +3,11 @@ variable "name" {
   type        = string
 }
 
+variable "iam_admin_role_arn" {
+  description = "IAM Role ARN für Admin"
+  type        = string
+}
+
 variable "queue_arn" {
   description = "ARN der SQS-Queue, aus der Events konsumiert werden"
   type        = string
@@ -41,18 +46,6 @@ variable "architectures" {
   description = "CPU-Architekturen (z. B. arm64)"
   type        = list(string)
   default     = ["arm64"]
-}
-
-variable "s3_put_object_arns" {
-  description = "Liste von S3-Bucket-ARNs, auf die PutObject erlaubt sein soll"
-  type        = list(string)
-  default     = []
-}
-
-variable "sqs_send_arns" {
-  description = "Liste von SQS-Queue-ARNs, auf die SendMessage/SendMessageBatch erlaubt sein soll"
-  type        = list(string)
-  default     = []
 }
 
 variable "tags" {
