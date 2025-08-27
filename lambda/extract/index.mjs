@@ -16,8 +16,8 @@ export const handler = async (event) => {
             const body = typeof message.body === "string" ? JSON.parse(message.body) : message.body;
 
             // TODO: Originale Nachricht als NDJSON speichern
-            // Bucket-Key => raw-message/${message.messageId}.jsonl
-            // Nachricht in Landing-Bucket speichern: Body => SON.stringify(body) + "\n"
+            // Bucket-Key => raw-message/${message.messageId}.ndjson
+            // Nachricht in Landing-Bucket speichern: Body => JSON.stringify(body) + "\n"
             // Tipp: PutObjectCommand()
 
             // TODO: Audit-Drop (nicht kritisch für Erfolg)

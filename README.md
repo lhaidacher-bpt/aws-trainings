@@ -101,7 +101,7 @@ terraform apply
 3. Lambda „Extract“ (SQS Landing → S3 Landing → SQS Splitter)
    - Event Source Mapping konfigurieren (Batching, Partial Batch Failure)
    - Nachricht JSON in S3-Landing-Bucket ablegen: `raw-message/<messageId>.jsonl`
-   - Audit-Drop als JSON in S3-Logs-Branch: `landing-audit/<messageId>.json`
+   - Audit-Drop als JSON in S3-Logs-Bucket: `landing-audit/<messageId>.json`
    - Original-Nachricht an SQS-Splitter-Queue weiterleiten
 4. Lambda „Splitter“ (SQS Splitter → S3 Staging)
    - Event Source Mapping konfigurieren
