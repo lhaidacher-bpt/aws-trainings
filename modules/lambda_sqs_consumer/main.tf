@@ -1,3 +1,10 @@
+terraform {
+  required_providers {
+    aws     = { source = "hashicorp/aws", version = ">= 5.0" }
+    archive = { source = "hashicorp/archive", version = ">= 2.2.0" }
+  }
+}
+
 locals { zip_out = "${path.module}/build/${var.name}.zip" }
 
 data "archive_file" "zip" {
@@ -14,6 +21,7 @@ resource "aws_lambda_function" "this" {
   filename         = data.archive_file.zip.output_path
   source_code_hash = data.archive_file.zip.output_base64sha256
   architectures    = var.architectures
+  timeout          = 10
   environment { variables = var.env }
   tags = var.tags
 }

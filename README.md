@@ -89,33 +89,37 @@ terraform apply
 **Ziel**: Eingehende Nachrichten über eine SQS Queues und Lambdas verarbeiten und aufbereiten
 
 ### Lernziele
+
 - SQS zu Lambda Event Source Mapping (Batching, Partial Batch Failure)
 - Least-Privilege IAM für S3 PutObject, SQS Receive/Delete/Send
 - Node.js 22 Lambda (AWS SDK v3, keine zusätzlichen Packages)
 
 ### Aufgaben
+
 1. Workspace vorbereiten (init & .tfvars kopieren)
 2. Queues anlegen (jeweils mit DLQ & Redrive Policy)
-   - Landing
-   - Splitter 
+    - Landing
+    - Splitter
 3. Lambda „Extract“ (SQS Landing → S3 Landing → SQS Splitter)
-   - Event Source Mapping konfigurieren (Batching, Partial Batch Failure)
-   - Nachricht JSON in S3-Landing-Bucket ablegen: `raw-message/<messageId>.jsonl`
-   - Audit-Drop als JSON in S3-Logs-Branch: `landing-audit/<messageId>.json`
-   - Original-Nachricht an SQS-Splitter-Queue weiterleiten
+    - Event Source Mapping konfigurieren (Batching, Partial Batch Failure)
+    - Nachricht als NDJSON im S3-Landing-Bucket ablegen: `s3://<LANDING_BUCKET>/raw-message/<messageId>.ndjson`
+    - Audit-Drop als JSON im Logs-Bucket ablegen: `s3://<LOGS_BUCKET>/landing-audit/<messageId>.json`
+    - Original-Nachricht an SQS-Splitter-Queue weiterleiten
 4. Lambda „Splitter“ (SQS Splitter → S3 Staging)
-   - Event Source Mapping konfigurieren
-   - Einzel-Dateien als JSON in S3-Staging-Bucket ablegen: `raw-events/<eventId>.json`
+    - Event Source Mapping konfigurieren
+    - events[] als einzelne JSON-Dateien im S3-Staging-Bucket
+      speichern: `s3://<STAGING_BUCKET>/raw-events/<eventId>.json`
 5. Validate & Plan
-   - Formatierung
-   - Validierung
-   - Planung
+    - Formatierung
+    - Validierung
+    - Planung
 
 ### Definition of Done
-- Eine Nachricht in SQS Landing Queue erzeugt eine JSON-Datei im S3-Landing-Bucket
-- Audit-Eintrag im Logs-Bucket unter `landing/...` wird erstellt
+
+- Eine Nachricht in der Landing Queue erzeugt eine NDJSON-Datei unter `raw-message/<messageId>.ndjson`
+- Audit-Eintrag wird unter `landing-audit/<messageId>.json` erstellt
 - Nachricht wird an Splitter Queue weitergeleitet
-- Splitter legt pro Event eine JSON-Datei im S3-Staging-Bucket unter `raw-events/...` ab
+- Splitter legt pro Event eine JSON-Datei unter `raw-events/<eventId>.json` ab
 - Partial Batch Failure ist aktiv und funktioniert
 - DLQs bleiben leer bei gültigem Input
 - `terraform fmt/validate/plan` ohne Fehler
