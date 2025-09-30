@@ -123,3 +123,59 @@ terraform apply
 - Partial Batch Failure ist aktiv und funktioniert
 - DLQs bleiben leer bei gültigem Input
 - `terraform fmt/validate/plan` ohne Fehler
+
+## 3. Training: Step-Function
+
+- **Ziel:** Eine "Standard" Step Function orchestriert die Verarbeitung eines einzelnen Events aus dem S3 Staging
+  Bucket.
+
+### Step-Function Architektur
+
+<img src="docs/architecture/step-function.png" alt="Step Function" style="width:400px;"/>
+
+### Lernziele
+
+- Grundbausteine: Task (Lambda), AWS SDK Integrations (S3 Put/Delete)
+- Parameters, OutputPath/ResultPath, ResultSelector, Intrinsics (States.Format, States.JsonToString,
+  States.Base64Encode)
+- (Optional) Retry auf Tasks
+
+### Aufgaben
+
+1. Workspace vorbereiten (init & .tfvars kopieren)
+2. Lambda „Transform“
+    - Implementieren der Lambda-Funktionalität in `/lambda/transform/index.mjs`
+        - Einzelnes Event aus `s3://<STAGING_BUCKET>/raw-events/<eventId>.json` lesen
+        - Roh-Event nach vorgegeben Schema transformieren
+        - Transformiertes Event inklusive benötigte Parameter an nächsten Step übergeben
+    - Implementieren der Terraform-Definition in `/modules/lambda_sf_tranform/main.tf`
+        - Umsetzen der To-dos
+        - Lambda-Terraform ist ausgelagert; Vorteil: Transformierung kann ausgetauscht werden, ohne StepFunction ändern
+          zu müssen
+3. Step-Function (Definition)
+    - Implementieren laut Architektur - Bausteine: Transform-Lambda, S3-Put-Object und S3-Delete-Object
+    - *Achtung*: auf Benennung der Return-Parameter achten
+    - _lambda:invoke_ Parameter
+        - FunctionName: `${var.transform_lambda_arn}`
+        - Payload: `$`
+    - _s3:putObject_ Parameter
+        - Bucket: `$.bucket`
+        - Key: `States.Format('transformed/id={}/{}.json', $.transformedId, $.millis)`
+        - Body: `$.event`
+        - ContentType: `application/json`
+    - _s3:deleteObject_ Parameter
+        - Bucket: `$.bucket`
+        - Key: `$.rawId`
+4. Anpassen der `main.tf`: Lambda und Step-Function hinzufügen
+5. Validate & Plan
+    - Formatierung
+    - Validierung
+    - Planung
+
+### Definition of Done
+
+- Eine Ausführung mit Input { "eventId": "<EVENT_ID>" }
+    - legt genau eine Datei unter transformed/<EVENT_ID>/<millis>.json an (inkl. korrektes Mapping),
+    - löscht das ursprüngliche Raw-Objekt raw-events/<EVENT_ID>.json.
+- Der State Output enthält putResult.etag (durch ResultSelector) und weiterhin bucket/rawKey.
+- terraform fmt/validate/plan ohne Fehler; Deployment erfolgreich.

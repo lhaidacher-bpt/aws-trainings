@@ -105,3 +105,11 @@ module "lambda_splitter" {
 
   tags = merge(local.tags_base, { Purpose = "splitter-lambda" })
 }
+
+// TODO Lambda SFN Transform Modul hinzufügen
+
+# ---------------------
+# --- Step-Function ---
+# ---------------------
+
+// TODO SFN Modul hinzufügen
