@@ -6,17 +6,22 @@ const STAGING_BUCKET = process.env.STAGING_BUCKET;
 
 export const handler = async (input) => {
     const rawEventId = `raw-events/${input?.eventId}.json`
+    const res = await s3.send(new GetObjectCommand({Bucket: STAGING_BUCKET, Key: rawEventId}));
+    const text = await res.Body.transformToString("utf-8");
+    const rawEvent = JSON.parse(text);
 
-    // TODO: Einzelnes JSON Rohevent aus S3 lesen
-    // new GetObjectCommand({Bucket: STAGING_BUCKET, Key: rawEventId})
-    // transformToString("utf-8")
-    // JSON.parse()
+    const transformedEvent = {
+        id: rawEvent.id,
+        vorname: rawEvent.firstName,
+        nachname: rawEvent.lastName,
+        status: rawEvent.status,
+    };
 
-    // TODO: Rohevent in das neue Schema überführen
-    // from: { id, firstName, lastName, status }
-    // to:   { id, vorname, nachname, status }
-
-    // TODO: Bucket, Rohevent-ID, transformiertes Event, Millis an nächsten Step übergeben
-    // return: bucket, rawId, transformedId, event, millis
-    return null;
+    return {
+        bucket: STAGING_BUCKET,
+        rawId: rawEventId,
+        transformedId: transformedEvent.id,
+        event: transformedEvent,
+        millis: Date.now()
+    };
 };

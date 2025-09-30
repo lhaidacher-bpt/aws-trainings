@@ -106,10 +106,28 @@ module "lambda_splitter" {
   tags = merge(local.tags_base, { Purpose = "splitter-lambda" })
 }
 
-// TODO Lambda SFN Transform Modul hinzufügen
+module "lambda_sfn_transform" {
+  source             = "./modules/lambda_sfn_transform"
+  name               = "${local.name_base}-sfn-transform"
+  code_dir           = "${path.root}/lambda/transform"
+  iam_admin_role_arn = var.iam_admin_role_arn
+
+  env = {
+    STAGING_BUCKET = module.s3_staging.bucket_name
+  }
+
+  tags = merge(local.tags_base, { Purpose = "sfn-transform-lambda" })
+}
 
 # ---------------------
 # --- Step-Function ---
 # ---------------------
 
-// TODO SFN Modul hinzufügen
+module "sfn_transform" {
+  source               = "./modules/step-function"
+  name                 = "${local.name_base}-sfn-transform"
+  iam_admin_role_arn   = var.iam_admin_role_arn
+  transform_lambda_arn = module.lambda_sfn_transform.function_arn
+  tags                 = merge(local.tags_base, { Purpose = "sfn-transform" })
+}
+

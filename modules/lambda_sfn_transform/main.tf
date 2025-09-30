@@ -8,9 +8,20 @@ terraform {
 locals { zip_out = "${path.module}/build/${var.name}.zip" }
 
 data "archive_file" "zip" {
-  // TODO Implementierung - Tipp: siehe existierenden Terraform-Lambda-Code
+  type        = "zip"
+  source_dir  = var.code_dir
+  output_path = local.zip_out
 }
 
 resource "aws_lambda_function" "this" {
-  // TODO Implementierung - Tipp: siehe existierenden Terraform-Lambda-Code
+  function_name    = var.name
+  role             = var.iam_admin_role_arn
+  runtime          = var.runtime
+  handler          = "index.handler"
+  filename         = data.archive_file.zip.output_path
+  source_code_hash = data.archive_file.zip.output_base64sha256
+  architectures    = var.architectures
+  timeout          = 10
+  environment { variables = var.env }
+  tags = var.tags
 }
