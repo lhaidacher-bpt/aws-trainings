@@ -15,7 +15,7 @@ bis zu einer produktionsnahen Integration-Layer.
 1. Training – Terraform & S3: Terraform-Workspace und S3-Buckets mit Best-Practices
 2. Training – Lambda & SQS: SQS-Queue, Lambda-Trigger und rudimentäre Verarbeitung
 3. Training - Step Functions & Monitoring: Orchestrierung und CloudWatch/Costs/Observability-Basics
-4. Training - IAM & Externe API Push via Lambda: Berechtigungen und Push zu Salesforce
+4. Training - EventBridge & AppFlow
 5. Training - tbd: (z.B.) CI/CD für Terraform, Replikation/DR, Storage Lens, Data Events
 
 #### Trainingsformat
@@ -50,6 +50,8 @@ terraform plan -refresh=false
 terraform apply
 ```
 
+---
+
 ## 1. Training: Terraform & S3
 
 **Ziel**: Terraform-Workspace initialisieren und drei S3-Buckets (logs, landing, staging) mit soliden Defaults erstellen
@@ -83,6 +85,8 @@ terraform apply
 - 3 Buckets existieren mit Object Ownership und Policies
 - `terraform fmt/validate/plan` ohne Fehler
 - `outputs` listen die drei Bucket-Namen
+
+---
 
 ## 2. Training: SQS & Lambda
 
@@ -123,6 +127,8 @@ terraform apply
 - Partial Batch Failure ist aktiv und funktioniert
 - DLQs bleiben leer bei gültigem Input
 - `terraform fmt/validate/plan` ohne Fehler
+
+---
 
 ## 3. Training: Step-Function
 
@@ -180,8 +186,97 @@ terraform apply
 - Der State Output enthält putResult.etag (durch ResultSelector) und weiterhin bucket/rawKey.
 - terraform fmt/validate/plan ohne Fehler; Deployment erfolgreich.
 
-## 4. Training: EventBridge und AppFlow
+---
 
-- EventBridge: s3:ObjectCreate-Event -> EventBridge -> trigger StepFunction (Training #3)
-- AppFlow: EventBridge-Scheduler -> trigger AppFlow
-- (optional) IAM: create execution role
+## 4. Training: Automatisierung – EventBridge & AppFlow (Salesforce)
+
+**Ziel**
+
+1) EventBridge startet bei jedem neuen Objekt unter `s3://<STAGING_BUCKET>/raw-events/` automatisch die Step Function
+   aus Training #3 (pro Objekt eine Ausführung).
+2) AppFlow synchronisiert die Inhalte aus `s3://<STAGING_BUCKET>/transformed/` jede Minute nach Salesforce (Lead) –
+   gesteuert durch den AppFlow‑eigenen Scheduler.
+
+### Architektur (Kontext)
+
+- **Bisher (T#3):** `S3 (raw-events); (manuelles triggern) Step Function → S3 (transformed)`
+- **Neu in T#4:**
+    - `S3 (raw-events) ─ EventBridge Rule -> Step Function (auto)`
+    - `S3 (transformed) ─ AppFlow (Schedule: every 1 min) -> Salesforce (Lead)`
+
+### Lernziele
+
+- EventBridge Event Pattern für S3 ObjectCreated (Prefix‑Filter, Rule/Target‑Role)
+- Step Functions StartExecution per EventBridge (Input‑Transformer `{ bucket, key }`)
+- AppFlow S3 -> Salesforce (Flow, Field‑Mapping, Scheduled Trigger)
+
+### Voraussetzungen
+
+- Salesforce Connector Profile existiert bereits: `fosil-training-salesforce-profile`
+- Salesforce Ziel‑Objekt: Lead
+    - id -> CustomerPartnerNumber__c
+    - vorname -> FirstName
+    - nachname -> LastName
+- Verwenden der existierenden `fosil-training-admin-role` Rolle
+
+### Aufgaben
+
+1) `terraform.tfvars` aktualisieren (wichtig!)
+   ```hcl
+   # EventBridge → Step Functions
+   iam_admin_role_arn         = "<ARN der Trainings-Rolle>"
+   sf_connector_profile_name  = "<Name von Salesforce Profile>"
+   ```
+
+2) S3 -> EventBridge aktivieren (Bucket‑Toggle)
+    - In Terraform sicherstellen, dass am Staging‑Bucket EventBridge aktiviert ist:
+      ```hcl
+      resource "aws_s3_bucket_notification" "staging_eventbridge" {}
+      ```
+
+3) EventBridge Rule: `raw-events/` -> Step Function
+    - Modul anlegen, das eine Rule mit Prefix‑Filter erstellt und die State Machine startet.
+    - Kernpunkte (vereinfacht, sinngemäß):
+        - Rule (enabled) – Pattern:
+          ```json
+          {
+            "source": ["aws.s3"],
+            "detail-type": ["Object Created"],
+            "detail": {
+              "bucket": { "name": ["<STAGING_BUCKET>"] },
+              "object" : { "key" : [{ "wildcard" : "${var.prefix}/*.json" }] }
+            }
+          }
+          ```
+        - Target: Step Functions mit Input‑Transformer
+          ```json
+          { "bucket": "<bucket>", "key": "<key>" }
+          ```
+
+4) AppFlow: S3 (transformed/) -> Salesforce (Lead), Schedule jede Minute
+    - trigger_type: Scheduled
+    - Quelle: S3
+        - Bucket: `<STAGING_BUCKET>`
+        - Prefix: `transformed`
+        - Typ: `JSON`
+    - Ziel: Salesforce (Connector Profile **`fosil-training-salesforce-profile`**)
+        - Object: **Lead**
+        - Write Operation: **UPSERT** (Upsert‑Id: `CustomerPartnerNumber__c`)
+    - Field Mapping
+        - `id` → `CustomerPartnerNumber__c`
+        - `vorname` → `FirstName`
+        - `nachname` → `LastName`
+    - Schedule: `rate(1 minute)` (AppFlow‑Scheduler)
+
+5) **Validate & Plan**
+    - `terraform fmt -recursive`
+    - `terraform validate`
+    - `terraform plan` (→ `apply`)
+
+### Definition of Done
+
+- EventBridge → Step Functions: Upload von `raw-events/<id>.json` im Staging‑Bucket startet genau eine
+  State‑Machine‑Ausführung.
+- AppFlow (Lead‑Sync)
+    - Der Flow läuft jede Minute automatisch und upsertet nach **Lead**:
+    - AppFlow‑Run‑Historie zeigt Success, keine Failed Records.
