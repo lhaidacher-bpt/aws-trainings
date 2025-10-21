@@ -2,25 +2,29 @@ import {S3Client, GetObjectCommand} from "@aws-sdk/client-s3";
 
 const s3 = new S3Client({})
 
-const STAGING_BUCKET = process.env.STAGING_BUCKET;
-
 export const handler = async (input) => {
-    const rawEventId = `raw-events/${input?.eventId}.json`
-    const res = await s3.send(new GetObjectCommand({Bucket: STAGING_BUCKET, Key: rawEventId}));
-    const text = await res.Body.transformToString("utf-8");
-    const rawEvent = JSON.parse(text);
+    const bucket = input?.bucket
+    const rawKey = input?.key
+
+    if (!bucket || !rawKey) {
+        throw new Error("Missing 'bucket' or 'key' in input. Expected { bucket, rawKey }");
+    }
+
+    const resultStream = await s3.send(new GetObjectCommand({Bucket: bucket, Key: rawKey}));
+    const stringEvent = await resultStream.Body.transformToString("utf-8");
+    const jsonRawEvent = JSON.parse(stringEvent);
 
     const transformedEvent = {
-        id: rawEvent.id,
-        vorname: rawEvent.firstName,
-        nachname: rawEvent.lastName,
-        status: rawEvent.status,
+        id: jsonRawEvent.id,
+        vorname: jsonRawEvent.firstName,
+        nachname: jsonRawEvent.lastName,
+        status: jsonRawEvent.status,
     };
 
     return {
-        bucket: STAGING_BUCKET,
-        rawId: rawEventId,
-        transformedId: transformedEvent.id,
+        bucket: bucket,
+        rawKey: rawKey,
+        id: transformedEvent.id,
         event: transformedEvent,
         millis: Date.now()
     };

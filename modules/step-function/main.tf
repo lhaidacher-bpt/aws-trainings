@@ -10,11 +10,11 @@ resource "aws_sfn_state_machine" "this" {
     "TransformEvent": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
-      "OutputPath": "$.Payload",
       "Parameters": {
         "FunctionName": "${var.transform_lambda_arn}",
         "Payload.$": "$"
       },
+      "OutputPath": "$.Payload",
       "Next": "WriteTransformed"
     },
     "WriteTransformed": {
@@ -22,7 +22,7 @@ resource "aws_sfn_state_machine" "this" {
       "Resource": "arn:aws:states:::aws-sdk:s3:putObject",
       "Parameters": {
         "Bucket.$": "$.bucket",
-        "Key.$": "States.Format('transformed/id={}/{}.json', $.transformedId, $.millis)",
+        "Key.$": "States.Format('transformed/id={}/{}.json', $.id, $.millis)",
         "Body.$": "$.event",
         "ContentType": "application/json"
       },
@@ -34,8 +34,9 @@ resource "aws_sfn_state_machine" "this" {
       "Resource": "arn:aws:states:::aws-sdk:s3:deleteObject",
       "Parameters": {
         "Bucket.$": "$.bucket",
-        "Key.$": "$.rawId"
+        "Key.$": "$.rawKey"
       },
+      "ResultPath": "$.deleteResult",
       "End": true
     }
   }

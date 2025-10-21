@@ -37,3 +37,8 @@ variable "lifecyclePolicy" {
   })
   default = { enable = false }
 }
+
+variable "enable_eventbridge_notification" {
+  type    = bool
+  default = false
+}

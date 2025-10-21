@@ -179,3 +179,9 @@ terraform apply
     - löscht das ursprüngliche Raw-Objekt raw-events/<EVENT_ID>.json.
 - Der State Output enthält putResult.etag (durch ResultSelector) und weiterhin bucket/rawKey.
 - terraform fmt/validate/plan ohne Fehler; Deployment erfolgreich.
+
+## 4. Training: EventBridge und AppFlow
+
+- EventBridge: s3:ObjectCreate-Event -> EventBridge -> trigger StepFunction (Training #3)
+- AppFlow: EventBridge-Scheduler -> trigger AppFlow
+- (optional) IAM: create execution role

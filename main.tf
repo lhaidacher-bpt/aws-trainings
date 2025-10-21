@@ -41,12 +41,13 @@ module "s3_landing" {
 }
 
 module "s3_staging" {
-  source              = "./modules/s3-bucket"
-  bucket_name         = "${local.name_base}-staging"
-  enable_versioning   = true
-  encryption_type     = "SSE-S3"
-  block_public_access = true
-  tags                = merge(local.tags_base, { Purpose = "staging-bucket" })
+  source                          = "./modules/s3-bucket"
+  bucket_name                     = "${local.name_base}-staging"
+  enable_versioning               = true
+  encryption_type                 = "SSE-S3"
+  block_public_access             = true
+  enable_eventbridge_notification = true
+  tags                            = merge(local.tags_base, { Purpose = "staging-bucket" })
 
   lifecyclePolicy = {
     enable                   = true
@@ -111,16 +112,11 @@ module "lambda_sfn_transform" {
   name               = "${local.name_base}-sfn-transform"
   code_dir           = "${path.root}/lambda/transform"
   iam_admin_role_arn = var.iam_admin_role_arn
-
-  env = {
-    STAGING_BUCKET = module.s3_staging.bucket_name
-  }
-
-  tags = merge(local.tags_base, { Purpose = "sfn-transform-lambda" })
+  tags               = merge(local.tags_base, { Purpose = "sfn-transform-lambda" })
 }
 
 # ---------------------
-# --- Step-Function ---
+# --- StepFunction ---
 # ---------------------
 
 module "sfn_transform" {
@@ -131,3 +127,16 @@ module "sfn_transform" {
   tags                 = merge(local.tags_base, { Purpose = "sfn-transform" })
 }
 
+# -------------------
+# --- EventBridge ---
+# -------------------
+
+module "eventbridge_raw_to_sfn" {
+  source             = "./modules/eventbridge_s3_to_sfn"
+  name               = "${local.name_base}-raw2sfn"
+  iam_admin_role_arn = var.iam_admin_role_arn
+  source_bucket_name = module.s3_staging.bucket_name
+  target_sfn_arn     = module.sfn_transform.state_machine_arn
+  prefix             = "raw-events/"
+  tags               = merge(local.tags_base, { Purpose = "auto-start-sfn" })
+}
