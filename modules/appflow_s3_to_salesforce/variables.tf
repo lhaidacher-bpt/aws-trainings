@@ -28,16 +28,10 @@ variable "salesforce_object" {
   type        = string
 }
 
-variable "write_operation_type" {
-  description = "INSERT oder UPSERT"
-  type        = string
-  default     = "UPSERT"
-}
-
 variable "schedule_expression" {
   description = "Trigger-Planung"
   type        = string
-  default     = "rate(2 minutes)"
+  default     = "rate(1 minutes)"
 }
 
 variable "dest_field_id" {

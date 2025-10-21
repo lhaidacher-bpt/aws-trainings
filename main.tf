@@ -154,9 +154,9 @@ module "appflow_s3_to_salesforce" {
   bucket_prefix          = "transformed"
 
   salesforce_object   = "Lead"
-  dest_field_id       = "Id"
+  dest_field_id       = "CustomerPartnerNumber__c"
   dest_field_vorname  = "FirstName"
-  dest_field_nachname = "Lastname"
+  dest_field_nachname = "LastName"
 
   tags = merge(local.default_tags, { Purpose = "appflow-sync" })
 }

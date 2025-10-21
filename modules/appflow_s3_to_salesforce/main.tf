@@ -1,6 +1,6 @@
 resource "aws_appflow_flow" "this" {
   name        = var.name
-  description = "S3 transformed -> Salesforce via AppFlow"
+  description = "S3 to Salesforce via AppFlow"
 
   trigger_config {
     trigger_type = "Scheduled"
@@ -19,6 +19,7 @@ resource "aws_appflow_flow" "this" {
       s3 {
         bucket_name   = var.bucket_name
         bucket_prefix = var.bucket_prefix
+
         s3_input_format_config {
           s3_input_file_type = "JSON"
         }
@@ -33,10 +34,20 @@ resource "aws_appflow_flow" "this" {
     destination_connector_properties {
       salesforce {
         object               = var.salesforce_object
-        write_operation_type = var.write_operation_type
+        write_operation_type = "UPSERT"
         id_field_names       = [var.dest_field_id]
+
+        error_handling_config {
+          fail_on_first_destination_error = false
+        }
       }
     }
+  }
+
+  task {
+    task_type         = "Map"
+    source_fields     = ["id"]
+    destination_field = var.dest_field_id
   }
 
   task {
@@ -49,6 +60,14 @@ resource "aws_appflow_flow" "this" {
     task_type         = "Map"
     source_fields     = ["nachname"]
     destination_field = var.dest_field_nachname
+  }
+
+  task {
+    task_type     = "Filter"
+    source_fields = ["id", "vorname", "nachname"]
+    connector_operator {
+      s3 = "PROJECTION"
+    }
   }
 
   tags = var.tags
