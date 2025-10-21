@@ -137,6 +137,6 @@ module "eventbridge_raw_to_sfn" {
   iam_admin_role_arn = var.iam_admin_role_arn
   source_bucket_name = module.s3_staging.bucket_name
   target_sfn_arn     = module.sfn_transform.state_machine_arn
-  prefix             = "raw-events/"
+  prefix             = "raw-events"
   tags               = merge(local.tags_base, { Purpose = "auto-start-sfn" })
 }

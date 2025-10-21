@@ -7,7 +7,7 @@ resource "aws_cloudwatch_event_rule" "s3_object_created" {
     "detail-type" : ["Object Created"],
     "detail" : {
       "bucket" : { "name" : [var.source_bucket_name] },
-      "object" : { "key" : [{ "wildcard" : "raw-events/*.json" }] }
+      "object" : { "key" : [{ "wildcard" : "${var.prefix}/*.json" }] }
     }
   })
 
