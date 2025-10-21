@@ -73,6 +73,5 @@ resource "aws_s3_bucket_lifecycle_configuration" "this" {
 }
 
 resource "aws_s3_bucket_notification" "staging_eventbridge" {
-  bucket      = aws_s3_bucket.this.bucket
-  eventbridge = var.enable_eventbridge_notification
+  //TODO var.enable_eventbridge_notification
 }
