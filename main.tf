@@ -133,10 +133,30 @@ module "sfn_transform" {
 
 module "eventbridge_raw_to_sfn" {
   source             = "./modules/eventbridge_s3_to_sfn"
-  name               = "${local.name_base}-raw2sfn"
+  name               = "${local.name_base}-raw-to-sfn"
   iam_admin_role_arn = var.iam_admin_role_arn
   source_bucket_name = module.s3_staging.bucket_name
   target_sfn_arn     = module.sfn_transform.state_machine_arn
   prefix             = "raw-events"
   tags               = merge(local.tags_base, { Purpose = "auto-start-sfn" })
+}
+
+# ---------------
+# --- AppFlow ---
+# ---------------
+
+module "appflow_s3_to_salesforce" {
+  source                 = "./modules/appflow_s3_to_salesforce"
+  name                   = "${local.name_base}-s3-to-sf"
+  iam_admin_role_arn     = var.iam_admin_role_arn
+  connector_profile_name = var.sf_connector_profile_name
+  bucket_name            = module.s3_staging.bucket_name
+  bucket_prefix          = "transformed"
+
+  salesforce_object   = "Lead"
+  dest_field_id       = "Id"
+  dest_field_vorname  = "FirstName"
+  dest_field_nachname = "Lastname"
+
+  tags = merge(local.default_tags, { Purpose = "appflow-sync" })
 }

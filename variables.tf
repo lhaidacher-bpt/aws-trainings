@@ -16,6 +16,12 @@ variable "iam_admin_role_arn" {
   # Kein default, soll im terraform.tfvars definiert werden
 }
 
+variable "sf_connector_profile_name" {
+  description = "Salesforce Connector Profile"
+  type        = string
+  # Kein default, soll im terraform.tfvars definiert werden
+}
+
 variable "aws_region" {
   description = "AWS Region"
   type        = string

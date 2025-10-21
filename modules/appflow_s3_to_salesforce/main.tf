@@ -1,0 +1,55 @@
+resource "aws_appflow_flow" "this" {
+  name        = var.name
+  description = "S3 transformed -> Salesforce via AppFlow"
+
+  trigger_config {
+    trigger_type = "Scheduled"
+
+    trigger_properties {
+      scheduled {
+        schedule_expression = var.schedule_expression
+      }
+    }
+  }
+
+  source_flow_config {
+    connector_type = "S3"
+
+    source_connector_properties {
+      s3 {
+        bucket_name   = var.bucket_name
+        bucket_prefix = var.bucket_prefix
+        s3_input_format_config {
+          s3_input_file_type = "JSON"
+        }
+      }
+    }
+  }
+
+  destination_flow_config {
+    connector_type         = "Salesforce"
+    connector_profile_name = var.connector_profile_name
+
+    destination_connector_properties {
+      salesforce {
+        object               = var.salesforce_object
+        write_operation_type = var.write_operation_type
+        id_field_names       = [var.dest_field_id]
+      }
+    }
+  }
+
+  task {
+    task_type         = "Map"
+    source_fields     = ["vorname"]
+    destination_field = var.dest_field_vorname
+  }
+
+  task {
+    task_type         = "Map"
+    source_fields     = ["nachname"]
+    destination_field = var.dest_field_nachname
+  }
+
+  tags = var.tags
+}

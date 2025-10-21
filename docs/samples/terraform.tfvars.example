@@ -1,2 +1,3 @@
 participant = ""
 iam_admin_role_arn = "arn:aws:iam::<account-id>:role/<lambda-exec-role>"
+sf_connector_profile_name = ""
