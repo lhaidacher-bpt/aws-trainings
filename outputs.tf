@@ -28,6 +28,6 @@ output "event_bridge_rule" {
   value = module.eventbridge_raw_to_sfn.rule_name
 }
 
-output "appflow" {
+output "app_flow" {
   value = module.appflow_s3_to_salesforce.flow_name
 }
