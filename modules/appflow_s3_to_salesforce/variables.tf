@@ -3,11 +3,6 @@ variable "name" {
   type        = string
 }
 
-variable "iam_admin_role_arn" {
-  description = "IAM Role ARN für Admin"
-  type        = string
-}
-
 variable "connector_profile_name" {
   description = "Name des bestehenden Salesforce Connector Profiles"
   type        = string
