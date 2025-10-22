@@ -8,6 +8,7 @@ resource "aws_appflow_flow" "this" {
     trigger_properties {
       scheduled {
         schedule_expression = var.schedule_expression
+        data_pull_mode = "Incremental"
       }
     }
   }
@@ -48,23 +49,40 @@ resource "aws_appflow_flow" "this" {
     task_type         = "Map"
     source_fields     = ["id"]
     destination_field = var.dest_field_id
+    task_properties = {}
+
+    connector_operator {
+      s3 = "NO_OP"
+    }
   }
 
   task {
     task_type         = "Map"
     source_fields     = ["vorname"]
     destination_field = var.dest_field_vorname
+    task_properties = {}
+
+    connector_operator {
+      s3 = "NO_OP"
+    }
   }
 
   task {
     task_type         = "Map"
     source_fields     = ["nachname"]
     destination_field = var.dest_field_nachname
+    task_properties = {}
+
+    connector_operator {
+      s3 = "NO_OP"
+    }
   }
 
   task {
     task_type     = "Filter"
     source_fields = ["id", "vorname", "nachname"]
+    task_properties = {}
+
     connector_operator {
       s3 = "PROJECTION"
     }
