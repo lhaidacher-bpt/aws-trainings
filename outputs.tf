@@ -19,3 +19,15 @@ output "lambdas" {
     splitter = try(module.lambda_splitter.function_name, null)
   }
 }
+
+output "step_function" {
+  value = module.sfn_transform.state_machine_name
+}
+
+output "event_bridge_rule" {
+  value = module.eventbridge_raw_to_sfn.target_id
+}
+
+output "appflow" {
+  value = module.appflow_s3_to_salesforce.flow_name
+}
