@@ -90,3 +90,30 @@ resource "aws_appflow_flow" "this" {
 
   tags = var.tags
 }
+
+data "aws_iam_policy_document" "s3_source" {
+  statement {
+    sid    = "AllowAppFlowSourceActions"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["appflow.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+    ]
+
+    resources = [
+      "arn:aws:s3:::${var.bucket_name}",
+      "arn:aws:s3:::${var.bucket_name}/*"
+    ]
+  }
+}
+
+resource "aws_s3_bucket_policy" "s3_source" {
+  bucket = var.bucket_name
+  policy = data.aws_iam_policy_document.s3_source.json
+}
