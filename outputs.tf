@@ -25,7 +25,7 @@ output "step_function" {
 }
 
 output "event_bridge_rule" {
-  value = module.eventbridge_raw_to_sfn.target_id
+  value = module.eventbridge_raw_to_sfn.rule_name
 }
 
 output "appflow" {

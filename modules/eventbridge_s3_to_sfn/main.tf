@@ -16,7 +16,7 @@ resource "aws_cloudwatch_event_rule" "s3_object_created" {
 
 resource "aws_cloudwatch_event_target" "start_sfn" {
   rule      = aws_cloudwatch_event_rule.s3_object_created.name
-  target_id = "sfn-${var.name}"
+  target_id = "${var.name}-target"
   arn       = var.target_sfn_arn
   role_arn  = var.iam_admin_role_arn
 
