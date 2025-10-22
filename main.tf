@@ -148,7 +148,6 @@ module "eventbridge_raw_to_sfn" {
 module "appflow_s3_to_salesforce" {
   source                 = "./modules/appflow_s3_to_salesforce"
   name                   = "${local.name_base}-s3-to-sf"
-  iam_admin_role_arn     = var.iam_admin_role_arn
   connector_profile_name = var.sf_connector_profile_name
   bucket_name            = module.s3_staging.bucket_name
   bucket_prefix          = "transformed"
