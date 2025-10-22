@@ -1,0 +1,16 @@
+{
+  "id": "bs8345-551k999-07",
+  "source": "demo",
+  "ingestTs": "2025-08-29T10:15:00Z",
+  "events": [
+    { "id": "dg1", "firstName": "David", "lastName": "Zimmermann", "status": "IN_PROGRESS" },
+    { "id": "dg2", "firstName": "Sophie", "lastName": "Bauer", "status": "NEW" },
+    { "id": "dg3", "firstName": "Ben", "lastName": "Koch", "status": "CONFIRMED" },
+    { "id": "dg4", "firstName": "Lara", "lastName": "Seidel", "status": "REJECTED" },
+    { "id": "dg5", "firstName": "Tobias", "lastName": "Fuchs", "status": "NEW" },
+    { "id": "dg6", "firstName": "Isabella", "lastName": "Peters", "status": "CONFIRMED" },
+    { "id": "dg7", "firstName": "Moritz", "lastName": "Kaiser", "status": "REJECTED" },
+    { "id": "dg8", "firstName": "Amelie", "lastName": "Kunz", "status": "IN_PROGRESS" },
+    { "id": "dg9", "firstName": "Niklas", "lastName": "Simon", "status": "NEW" }
+  ]
+}
