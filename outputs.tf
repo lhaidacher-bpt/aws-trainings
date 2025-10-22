@@ -15,19 +15,20 @@ output "queues" {
 
 output "lambdas" {
   value = {
-    extract  = try(module.lambda_extract.function_name, null)
-    splitter = try(module.lambda_splitter.function_name, null)
+    extract       = try(module.lambda_extract.function_name, null)
+    splitter      = try(module.lambda_splitter.function_name, null)
+    sfn_transform = try(module.lambda_sfn_transform.function_name, null)
   }
 }
 
 output "step_function" {
-  value = module.sfn_transform.state_machine_name
+  value = try(module.sfn_transform.state_machine_name, null)
 }
 
 output "event_bridge_rule" {
-  value = module.eventbridge_raw_to_sfn.rule_name
+  value = try(module.eventbridge_raw_to_sfn.rule_name, null)
 }
 
 output "app_flow" {
-  value = module.appflow_s3_to_salesforce.flow_name
+  value = try(module.appflow_s3_to_salesforce.flow_name, null)
 }
