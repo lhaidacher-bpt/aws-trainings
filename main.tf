@@ -80,7 +80,6 @@ module "sqs_splitter" {
 module "lambda_extract" {
   source             = "./modules/lambda_sqs_consumer"
   name               = "${local.name_base}-extract"
-  queue_arn          = module.sqs_landing.arn
   code_dir           = "${path.root}/lambda/extract"
   iam_admin_role_arn = var.iam_admin_role_arn
 
@@ -90,19 +89,30 @@ module "lambda_extract" {
     LOG_BUCKET         = module.s3_logs.bucket_name
   }
 
+  sqs_read_arn = module.sqs_landing.arn
+  sqs_send_arn = module.sqs_splitter.arn
+  s3_put_arns = [
+    "${module.s3_landing.bucket_arn}/*",
+    "${module.s3_logs.bucket_arn}/*"
+  ]
+
   tags = merge(local.tags_base, { Purpose = "extract-lambda" })
 }
 
 module "lambda_splitter" {
   source             = "./modules/lambda_sqs_consumer"
   name               = "${local.name_base}-splitter"
-  queue_arn          = module.sqs_splitter.arn
   code_dir           = "${path.root}/lambda/splitter"
   iam_admin_role_arn = var.iam_admin_role_arn
 
   env = {
     STAGING_BUCKET = module.s3_staging.bucket_name
   }
+
+  sqs_read_arn = module.sqs_splitter.arn
+  s3_put_arns = [
+    "${module.s3_staging.bucket_arn}/*"
+  ]
 
   tags = merge(local.tags_base, { Purpose = "splitter-lambda" })
 }

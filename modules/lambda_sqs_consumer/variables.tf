@@ -8,11 +8,6 @@ variable "iam_admin_role_arn" {
   type        = string
 }
 
-variable "queue_arn" {
-  description = "ARN der SQS-Queue, aus der Events konsumiert werden"
-  type        = string
-}
-
 variable "code_dir" {
   description = "Pfad zum Code-Verzeichnis (wird als ZIP via archive_file gepackt)"
   type        = string
@@ -46,6 +41,23 @@ variable "architectures" {
   description = "CPU-Architekturen (z. B. arm64)"
   type        = list(string)
   default     = ["arm64"]
+}
+
+variable "sqs_read_arn" {
+  description = "ARN der SQS-Queue, aus der Events konsumiert werden"
+  type        = string
+}
+
+variable "sqs_send_arn" {
+  description = "ARN der SQS-Queue, in die Events gespeichert werden"
+  type        = string
+  default     = null
+}
+
+variable "s3_put_arns" {
+  description = "S3-ARNs für PutObject"
+  type        = list(string)
+  default     = []
 }
 
 variable "tags" {

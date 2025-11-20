@@ -280,3 +280,113 @@ terraform apply
 - AppFlow (Lead‑Sync)
     - Der Flow läuft jede Minute automatisch und upsertet nach **Lead**:
     - AppFlow‑Run‑Historie zeigt Success, keine Failed Records.
+
+# 5. Training: IAM – Least-Privilege für unsere Lambdas
+
+**Ziel**
+
+Die bisherige **Admin-Rolle** wird ersetzt. Für die Lambdas **Extract** und **Splitter** erstellen wir je eine **eigene
+Execution-Role** (Trust für `lambda.amazonaws.com`) mit **minimalen** Berechtigungen (Logs, SQS, S3). Funktionales
+Verhalten bleibt unverändert. Zusätzlich aktivieren wir **SSE‑KMS** für den **Landing‑Bucket** mittels **Customer
+Managed Key (CMK)** und vergeben **minimal nötige KMS‑Rechte** ausschließlich an die **Extract‑Lambda**.
+
+---
+
+## Architektur (Kontext)
+
+- **Unverändert:** SQS (Landing/Splitter), S3 (Logs/Landing/Staging), Step Functions, EventBridge, AppFlow.
+- **Neu in T#5:** Je Lambda eine **Least-Privilege Execution-Role** (keine Admin-Rolle mehr).
+
+---
+
+## Lernziele
+
+- Trust-Policy & `sts:AssumeRole` (warum Lambda Rollen „annimmt“).
+- Identity-Policies: **Actions** vs. **Resources** (präzise S3-Prefix-ARNs, SQS-Queue-ARNs).
+- Inline-Policies mit `data "aws_iam_policy_document"` (und wann Managed Policies sinnvoll sind).
+- Typische Fehlerbilder (AccessDenied), Debug über CloudWatch Logs.
+- Grundverständnis KMS: **CMK**, **Key Policy** vs. **IAM Policy**, **Encrypt/GenerateDataKey/Decrypt**.
+
+---
+
+## Voraussetzungen
+
+- Projektstand nach Training #4 (EventBridge + AppFlow) baut erfolgreich.
+- SQS- und S3-Ressourcen existieren (Landing, Splitter, Logs, Landing, Staging).
+
+---
+
+## Aufgaben
+
+1) **Vorbereitung**
+    - Neuen Branch auschecken (z. B. `training-5-starter`).
+    - In `/modules/lambda_sqs_consumer/variables.tf` die Variable **`iam_admin_role_arn` entfernen**.
+
+2) **TODOs im Modul `/modules/lambda_sqs_consumer/main.tf` umsetzen**
+    - **Trust-Policy** (Data Source) für `lambda.amazonaws.com` mit `sts:AssumeRole`.
+    - **Execution-Role** `aws_iam_role.execution` anlegen (Assume-JSON aus obiger Data Source).
+    - **Logs-Policy**
+    - **SQS-Policy** Read & Write
+    - **S3-Policy**
+    - **Lambda an neue Rolle binden**
+
+3) **Root-Module anpassen**
+    - **Extract**:
+        - `arn:aws:s3:::<landing-bucket>/*`
+        - `arn:aws:s3:::<logs-bucket>/*`
+        - `sqs_send_arn = <splitter-queue-arn>`
+    - **Splitter**: `s3_put_arns` = `arn:aws:s3:::<staging-bucket>/raw-events/*`
+    - **Alle Verweise auf `iam_admin_role_arn` entfernen** (Variablen + Aufrufe).
+
+4) OPTIONAL: KMS CMK
+   - **CMK (Customer Managed Key) anlegen**
+      - Modul `./modules/kms` erstellen oder vorhandenes verwenden
+      - **Key Policy** (pragmatisch): Root des Accounts darf alles (für das Training ok!).
+   - **Landing‑Bucket auf SSE‑KMS umstellen**
+      - In `module "s3_landing"`:
+        ```hcl
+        encryption_type = "SSE-KMS"
+        kms_key_id      = module.kms_landing.key_arn
+        ```
+      - Keine Änderungen an Logs/Staging (bleiben ohne KMS) → Unterschied ist demonstrierbar.
+   - **Extract‑Lambda KMS‑Rechte geben (nur das Nötigste)**
+      - In eurem `modules/lambda_sqs_consumer` Aufruf für **Extract**:
+         - **unverändert**: `s3_put_arns` mit Landing‑Bucket + Logs‑Prefix.
+         - **neu**: `kms_key_arns = [ module.kms_landing.key_arn ]`
+           ```hcl
+           actions   = ["kms:Encrypt","kms:GenerateDataKey","kms:GenerateDataKeyWithoutPlaintext","kms:DescribeKey"]
+           resources = var.kms_key_arns
+           ```
+      - **Kein `kms:Decrypt`** für Extract nötig, da sie nur **schreibt** (S3 erledigt die Verschlüsselung).
+
+4) **Validate & Plan**
+   ```bash
+   terraform fmt -recursive
+   terraform validate
+   terraform plan   # → terraform apply
+   ```
+
+---
+
+## Definition of Done
+
+- **Admin-Rolle ist vollständig entfernt.**  
+  Beide Lambdas verwenden ihre **eigene Execution-Role**.
+- **Extract-Lambda**:
+    - Kann von **Landing-Queue** lesen und nach **Landing-Bucket** sowie **Logs-Prefix** schreiben.
+    - Kann an **Splitter-Queue** senden.
+- **Splitter-Lambda**:
+    - Kann von **Splitter-Queue** lesen und nach **Staging/raw-events** schreiben.
+- **`terraform validate/plan`** ohne Fehler, **`apply`** erfolgreich.  
+  Smoke-Test: Nachricht in Landing-Queue → Dateien erscheinen wie zuvor (Logs/Landing bzw. Staging/raw-events).
+- **CMK existiert** (Alias z.B. `alias/train-landing`), Landing‑Bucket nutzt **SSE‑KMS**.
+
+---
+
+## Hinweise & Troubleshooting
+
+- **Rolle wirklich aktiv?** In `aws_lambda_function.this` muss `role = aws_iam_role.execution.arn` stehen.
+- **S3-ARNs:** Für **Objekte** immer `arn:aws:s3:::bucket/prefix/*`, nicht nur den Bucket-ARN.
+- **SQS-Queue-Policy:** Falls vorhanden, darf sie eure Execution-Role **nicht** aussperren (keine `Deny`-Condition).
+- **CloudWatch Logs** zeigen bei `AccessDenied` die **konkrete Action & Resource** → gezielt nachschärfen.
+

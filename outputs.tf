@@ -21,6 +21,13 @@ output "lambdas" {
   }
 }
 
+output "lambda_execution_roles" {
+  value = {
+    extract_execution_role  = try(module.lambda_extract.role_arn, null)
+    splitter_execution_role = try(module.lambda_splitter.role_arn, null)
+  }
+}
+
 output "step_function" {
   value = try(module.sfn_transform.state_machine_name, null)
 }

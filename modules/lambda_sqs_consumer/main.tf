@@ -13,6 +13,42 @@ data "archive_file" "zip" {
   output_path = local.zip_out
 }
 
+# Assume Role
+data "aws_iam_policy_document" "assume" {
+  //TODO
+}
+
+resource "aws_iam_role" "execution" {
+  //TODO
+}
+
+# Logs
+data "aws_iam_policy_document" "logs" {
+  //TODO
+}
+
+resource "aws_iam_role_policy" "logs" {
+  //TODO
+}
+
+# SQS Policy: Read & Write
+data "aws_iam_policy_document" "sqs" {
+  //TODO
+}
+
+resource "aws_iam_role_policy" "sqs" {
+  //TODO
+}
+
+# S3 Policy
+data "aws_iam_policy_document" "s3" {
+  //TODO
+}
+
+resource "aws_iam_role_policy" "s3" {
+  //TODO
+}
+
 resource "aws_lambda_function" "this" {
   function_name    = var.name
   role             = var.iam_admin_role_arn
@@ -27,7 +63,7 @@ resource "aws_lambda_function" "this" {
 }
 
 resource "aws_lambda_event_source_mapping" "from_sqs" {
-  event_source_arn                   = var.queue_arn
+  event_source_arn                   = var.sqs_read_arn
   function_name                      = aws_lambda_function.this.arn
   batch_size                         = var.batch_size
   maximum_batching_window_in_seconds = var.batch_window_seconds
