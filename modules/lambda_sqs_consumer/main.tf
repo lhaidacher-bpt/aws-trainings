@@ -13,45 +13,75 @@ data "archive_file" "zip" {
   output_path = local.zip_out
 }
 
-# Assume Role
 data "aws_iam_policy_document" "assume" {
-  //TODO
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
 }
 
 resource "aws_iam_role" "execution" {
-  //TODO
+  name               = "${var.name}-lambda-exec"
+  assume_role_policy = data.aws_iam_policy_document.assume.json
+  tags               = var.tags
 }
 
-# Logs
 data "aws_iam_policy_document" "logs" {
-  //TODO
+  statement {
+    actions   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+    resources = ["arn:aws:logs:*:*:*"]
+  }
 }
 
 resource "aws_iam_role_policy" "logs" {
-  //TODO
+  name   = "${var.name}-lambda-logs"
+  role   = aws_iam_role.execution.id
+  policy = data.aws_iam_policy_document.logs.json
 }
 
-# SQS Policy: Read & Write
 data "aws_iam_policy_document" "sqs" {
-  //TODO
+  statement {
+    actions   = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes", "sqs:GetQueueUrl"]
+    resources = [var.sqs_read_arn]
+  }
+
+  dynamic "statement" {
+    for_each = var.sqs_send_arn != null ? [1] : []
+    content {
+      actions   = ["sqs:SendMessage", "sqs:SendMessageBatch", "sqs:GetQueueAttributes", "sqs:GetQueueUrl"]
+      resources = [var.sqs_send_arn]
+    }
+  }
 }
 
 resource "aws_iam_role_policy" "sqs" {
-  //TODO
+  name   = "${var.name}-lambda-sqs"
+  role   = aws_iam_role.execution.id
+  policy = data.aws_iam_policy_document.sqs.json
 }
 
-# S3 Policy
 data "aws_iam_policy_document" "s3" {
-  //TODO
+  dynamic "statement" {
+    for_each = length(var.s3_put_arns) > 0 ? [1] : []
+    content {
+      actions   = ["s3:PutObject", "s3:AbortMultipartUpload"]
+      resources = var.s3_put_arns
+    }
+  }
 }
 
 resource "aws_iam_role_policy" "s3" {
-  //TODO
+  name   = "${var.name}-s3"
+  role   = aws_iam_role.execution.id
+  policy = data.aws_iam_policy_document.s3.json
 }
 
 resource "aws_lambda_function" "this" {
   function_name    = var.name
-  role             = var.iam_admin_role_arn
+  role             = aws_iam_role.execution.arn
   runtime          = var.runtime
   handler          = "index.handler"
   filename         = data.archive_file.zip.output_path

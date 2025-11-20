@@ -3,11 +3,6 @@ variable "name" {
   type        = string
 }
 
-variable "iam_admin_role_arn" {
-  description = "IAM Role ARN für Admin"
-  type        = string
-}
-
 variable "code_dir" {
   description = "Pfad zum Code-Verzeichnis (wird als ZIP via archive_file gepackt)"
   type        = string

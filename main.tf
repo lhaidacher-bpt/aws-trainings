@@ -81,7 +81,6 @@ module "lambda_extract" {
   source             = "./modules/lambda_sqs_consumer"
   name               = "${local.name_base}-extract"
   code_dir           = "${path.root}/lambda/extract"
-  iam_admin_role_arn = var.iam_admin_role_arn
 
   env = {
     LANDING_BUCKET     = module.s3_landing.bucket_name
@@ -103,7 +102,6 @@ module "lambda_splitter" {
   source             = "./modules/lambda_sqs_consumer"
   name               = "${local.name_base}-splitter"
   code_dir           = "${path.root}/lambda/splitter"
-  iam_admin_role_arn = var.iam_admin_role_arn
 
   env = {
     STAGING_BUCKET = module.s3_staging.bucket_name
