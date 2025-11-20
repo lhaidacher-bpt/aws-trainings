@@ -89,13 +89,6 @@ module "lambda_extract" {
     LOG_BUCKET         = module.s3_logs.bucket_name
   }
 
-  sqs_read_arn = module.sqs_landing.arn
-  sqs_send_arn = module.sqs_splitter.arn
-  s3_put_arns = [
-    "${module.s3_landing.bucket_arn}/*",
-    "${module.s3_logs.bucket_arn}/*"
-  ]
-
   tags = merge(local.tags_base, { Purpose = "extract-lambda" })
 }
 
@@ -108,11 +101,6 @@ module "lambda_splitter" {
   env = {
     STAGING_BUCKET = module.s3_staging.bucket_name
   }
-
-  sqs_read_arn = module.sqs_splitter.arn
-  s3_put_arns = [
-    "${module.s3_staging.bucket_arn}/*"
-  ]
 
   tags = merge(local.tags_base, { Purpose = "splitter-lambda" })
 }
